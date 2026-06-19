@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LinguaAI — Language Translator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07080f;
+  --surface:#0e1020;
+  --surface2:#141628;
+  --surface3:#1c1f38;
+  --border:#252845;
+  --border2:#2e3260;
+  --accent:#6c63ff;
+  --accent2:#9b93ff;
+  --green:#22d3a0;
+  --red:#ff5f7e;
+  --text:#f0f2ff;
+  --text2:#9a9dc8;
+  --text3:#5c6094;
+  --radius:14px;
+  --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:32px 16px;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(circle at 30% 40%,rgba(108,99,255,.06) 0%,transparent 50%),
+              radial-gradient(circle at 70% 70%,rgba(155,147,255,.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+.wrap{position:relative;z-index:1;width:100%;max-width:900px}
+header{text-align:center;margin-bottom:40px}
+.logo{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:24px;
+}
+.logo-dot{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),#a855f7);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+h1{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(32px,5vw,52px);font-weight:700;
+  background:linear-gradient(135deg,#fff 0%,var(--accent2) 50%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:12px;line-height:1.15;
+}
+.tagline{font-size:16px;color:var(--text2);font-weight:400}
+.api-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:30px;padding:6px 14px;font-size:12px;color:var(--text3);
+  margin-top:18px;
+}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,211,160,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(34,211,160,0)}}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(108,99,255,.05),0 40px 100px rgba(0,0,0,.6);
+}
+.lang-bar{
+  display:grid;grid-template-columns:1fr 64px 1fr;
+  align-items:center;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.lang-panel{
+  display:flex;align-items:center;gap:12px;
+  padding:18px 24px;
+}
+.lang-panel:first-child{border-right:1px solid var(--border)}
+.lang-panel:last-child{border-left:1px solid var(--border)}
+.lang-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);flex-shrink:0}
+select{
+  flex:1;background:transparent;border:none;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;
+  cursor:pointer;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%239a9dc8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 0 center;
+  padding-right:20px;
+}
+select option{background:#1c1f38;color:#f0f2ff}
+.swap-wrap{display:flex;align-items:center;justify-content:center}
+.swap-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text2);cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.swap-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:rotate(180deg)}
+.panels{display:grid;grid-template-columns:1fr 1fr;min-height:280px}
+.panel{display:flex;flex-direction:column;position:relative}
+.panel:first-child{border-right:1px solid var(--border)}
+textarea{
+  flex:1;width:100%;background:transparent;border:none;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:16px;line-height:1.7;
+  padding:24px;resize:none;outline:none;min-height:260px;
+}
+textarea::placeholder{color:var(--text3)}
+textarea[readonly]{color:var(--accent2);cursor:default}
+.panel-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;border-top:1px solid var(--border);
+  background:var(--surface2);
+}
+.char-count{font-size:12px;color:var(--text3)}
+.foot-actions{display:flex;gap:8px}
+.action-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surface3);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:5px 11px;
+  font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;
+  transition:all .18s;white-space:nowrap;
+}
+.action-btn:hover{background:var(--border2);color:var(--text)}
+.action-btn.success{background:rgba(34,211,160,.1);border-color:rgba(34,211,160,.3);color:var(--green)}
+.bottom-bar{
+  display:flex;align-items:center;gap:12px;
+  padding:18px 24px;border-top:1px solid var(--border);
+  background:var(--surface2);
+}
+.translate-btn{
+  flex:1;padding:14px 24px;
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  border:none;border-radius:var(--radius);
+  color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:all .2s;box-shadow:0 4px 24px rgba(108,99,255,.3);
+}
+.translate-btn:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(108,99,255,.4)}
+.translate-btn:active{transform:translateY(0)}
+.translate-btn:disabled{background:var(--surface3);box-shadow:none;color:var(--text3);cursor:not-allowed;transform:none}
+.clear-btn{
+  padding:14px 20px;background:transparent;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text2);font-family:'Inter',sans-serif;font-size:14px;cursor:pointer;
+  transition:all .18s;
+}
+.clear-btn:hover{border-color:var(--text3);color:var(--text)}
+.status-bar{
+  padding:10px 24px;font-size:13px;color:var(--text3);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;min-height:40px;
+}
+.status-bar.error{color:var(--red)}
+.status-bar.success{color:var(--green)}
+.spinner{
+  width:14px;height:14px;border:2px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;display:none;
+  flex-shrink:0;
+}
+.spinner.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.quality-wrap{display:none;align-items:center;gap:8px;margin-left:auto}
+.quality-wrap.show{display:flex}
+.quality-label{font-size:11px;color:var(--text3)}
+.quality-bar-outer{width:80px;height:4px;background:var(--border2);border-radius:4px;overflow:hidden}
+.quality-bar-inner{height:100%;border-radius:4px;transition:width .6s ease,background .4s;background:var(--green)}
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--border);
+}
+.stat{padding:16px 20px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;color:var(--accent2)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+@media(max-width:600px){
+  .panels{grid-template-columns:1fr;flex-direction:column}
+  .panel:first-child{border-right:none;border-bottom:1px solid var(--border)}
+  .lang-bar{grid-template-columns:1fr 48px 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:nth-child(2){border-right:none}
+  .stat:nth-child(3){border-top:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><div class="logo-dot">🌐</div>LinguaAI · CodeAlpha Task 1</div>
+    <h1>Language<br>Translator</h1>
+    <p class="tagline">100% offline dictionary engine — no internet, no API key needed</p>
+    <div class="api-pill"><div class="pill-dot"></div>Offline Engine · No internet needed · 12 languages</div>
+  </header>
+
+  <div class="card">
+    <div class="lang-bar">
+      <div class="lang-panel">
+        <span class="lang-label">From</span>
+        <select id="srcLang">
+          <option value="en">🇬🇧 English</option>
+          <option value="fr">🇫🇷 French</option>
+          <option value="es">🇪🇸 Spanish</option>
+          <option value="de">🇩🇪 German</option>
+          <option value="zh">🇨🇳 Chinese</option>
+          <option value="ja">🇯🇵 Japanese</option>
+          <option value="ko">🇰🇷 Korean</option>
+          <option value="hi">🇮🇳 Hindi</option>
+          <option value="pt">🇧🇷 Portuguese</option>
+          <option value="ru">🇷🇺 Russian</option>
+          <option value="it">🇮🇹 Italian</option>
+          <option value="tr">🇹🇷 Turkish</option>
+          <option value="ar">🇸🇦 Arabic</option>
+          <option value="nl">🇳🇱 Dutch</option>
+          <option value="pl">🇵🇱 Polish</option>
+          <option value="ur">🇵🇰 Urdu</option>
+          <option value="fa">🇮🇷 Persian</option>
+          <option value="bn">🇧🇩 Bengali</option>
+          <option value="sv">🇸🇪 Swedish</option>
+          <option value="el">🇬🇷 Greek</option>
+        </select>
+      </div>
+      <div class="swap-wrap">
+        <button class="swap-btn" onclick="swapLangs()" title="Swap languages">⇄</button>
+      </div>
+      <div class="lang-panel">
+        <span class="lang-label">To</span>
+        <select id="tgtLang">
+          <option value="ur">🇵🇰 Urdu</option>
+          <option value="fr">🇫🇷 French</option>
+          <option value="es">🇪🇸 Spanish</option>
+          <option value="de">🇩🇪 German</option>
+          <option value="zh">🇨🇳 Chinese</option>
+          <option value="ja">🇯🇵 Japanese</option>
+          <option value="ko">🇰🇷 Korean</option>
+          <option value="hi">🇮🇳 Hindi</option>
+          <option value="pt">🇧🇷 Portuguese</option>
+          <option value="ru">🇷🇺 Russian</option>
+          <option value="it">🇮🇹 Italian</option>
+          <option value="tr">🇹🇷 Turkish</option>
+          <option value="ar">🇸🇦 Arabic</option>
+          <option value="nl">🇳🇱 Dutch</option>
+          <option value="pl">🇵🇱 Polish</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="fa">🇮🇷 Persian</option>
+          <option value="bn">🇧🇩 Bengali</option>
+          <option value="sv">🇸🇪 Swedish</option>
+          <option value="el">🇬🇷 Greek</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <textarea id="srcText" placeholder="Start typing or paste text…" maxlength="500" oninput="onInput()"></textarea>
+        <div class="panel-foot">
+          <span class="char-count" id="charCount">0 / 500</span>
+          <div class="foot-actions">
+            <button class="action-btn" onclick="clearSrc()">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <textarea id="tgtText" readonly placeholder="Translation appears here…"></textarea>
+        <div class="panel-foot">
+          <span class="char-count" id="outCount"></span>
+          <div class="foot-actions">
+            <button class="action-btn" id="ttsBtn" onclick="speak()">▶ Listen</button>
+            <button class="action-btn" id="copyBtn" onclick="copyOut()">⧉ Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <button class="translate-btn" id="transBtn" onclick="doTranslate()">
+        <span id="btnIcon">🌐</span>
+        <span id="btnText">Translate</span>
+        <span style="font-size:12px;opacity:.6;font-weight:400">Ctrl+↵</span>
+      </button>
+      <button class="clear-btn" onclick="clearAll()">Clear all</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <div class="spinner" id="spinner"></div>
+      <span id="statusText">Enter text and click Translate</span>
+      <div class="quality-wrap" id="qualityWrap">
+        <span class="quality-label">Quality</span>
+        <div class="quality-bar-outer"><div class="quality-bar-inner" id="qualityBar" style="width:0%"></div></div>
+        <span id="qualityPct" style="font-size:11px;color:var(--green)"></span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="statWords">0</div><div class="stat-lbl">Words</div></div>
+      <div class="stat"><div class="stat-val" id="statChars">0</div><div class="stat-lbl">Characters</div></div>
+      <div class="stat"><div class="stat-val" id="statLang">—</div><div class="stat-lbl">Target Lang</div></div>
+      <div class="stat"><div class="stat-val" id="statReqs">0</div><div class="stat-lbl">Translations</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let reqCount = 0;
+
+function onInput(){
+  const v = document.getElementById('srcText').value;
+  document.getElementById('charCount').textContent = v.length + ' / 500';
+  document.getElementById('statChars').textContent = v.length;
+  document.getElementById('statWords').textContent = v.trim() ? v.trim().split(/\s+/).length : 0;
+}
+
+function swapLangs(){
+  const s = document.getElementById('srcLang');
+  const t = document.getElementById('tgtLang');
+  const tmp = s.value; s.value = t.value; t.value = tmp;
+  const st = document.getElementById('srcText');
+  const tt = document.getElementById('tgtText');
+  const tmpT = st.value; st.value = tt.value; tt.value = tmpT;
+  onInput();
+}
+
+function clearSrc(){
+  document.getElementById('srcText').value = '';
+  onInput();
+}
+
+function clearAll(){
+  document.getElementById('srcText').value = '';
+  document.getElementById('tgtText').value = '';
+  document.getElementById('outCount').textContent = '';
+  document.getElementById('qualityWrap').classList.remove('show');
+  setStatus('Ready for new text.', '');
+  onInput();
+}
+
+function copyOut(){
+  const t = document.getElementById('tgtText').value;
+  if(!t) return;
+  navigator.clipboard.writeText(t).then(() => {
+    const b = document.getElementById('copyBtn');
+    b.textContent = '✓ Copied';
+    b.classList.add('success');
+    setTimeout(() => { b.textContent = '⧉ Copy'; b.classList.remove('success'); }, 2000);
+  });
+}
+
+function speak(){
+  const t = document.getElementById('tgtText').value;
+  if(!t){ setStatus('Nothing to speak yet.', 'error'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = document.getElementById('tgtLang').value;
+  window.speechSynthesis.speak(u);
+  setStatus('🔊 Speaking…', 'success');
+  u.onend = () => setStatus('Done speaking.', 'success');
+}
+
+function setStatus(msg, type){
+  document.getElementById('statusText').textContent = msg;
+  document.getElementById('statusBar').className = 'status-bar' + (type ? ' ' + type : '');
+}
+
+// ── Offline Translation Dictionary ──────────────────────────────────────────
+// English as pivot language. All translations go en→X or X→en→X
+const DICT = {
+  // en → ur
+  'en-ur': {
+    'hello':'ہیلو','hi':'ہائے','good':'اچھا','morning':'صبح','evening':'شام',
+    'night':'رات','how':'کیسے','are':'ہیں','you':'آپ','i':'میں','am':'ہوں',
+    'fine':'ٹھیک','thank':'شکریہ','thanks':'شکریہ','please':'براہ کرم',
+    'yes':'ہاں','no':'نہیں','name':'نام','my':'میرا','what':'کیا','is':'ہے',
+    'your':'آپ کا','where':'کہاں','when':'کب','who':'کون','why':'کیوں',
+    'this':'یہ','that':'وہ','and':'اور','or':'یا','but':'لیکن','the':'','a':'','an':'',
+    'love':'محبت','friend':'دوست','family':'خاندان','home':'گھر','food':'کھانا',
+    'water':'پانی','work':'کام','school':'اسکول','book':'کتاب','time':'وقت',
+    'day':'دن','today':'آج','tomorrow':'کل','yesterday':'کل','now':'ابھی',
+    'come':'آئیں','go':'جائیں','eat':'کھائیں','drink':'پیئیں','see':'دیکھیں',
+    'know':'جانتے','want':'چاہتے','need':'ضرورت','have':'ہے','get':'لو',
+    'good morning':'صبح بخیر','good night':'شب بخیر','thank you':'شکریہ',
+    'how are you':'آپ کیسے ہیں','my name is':'میرا نام ہے',
+    'i love you':'میں تم سے محبت کرتا ہوں','welcome':'خوش آمدید',
+    'sorry':'معافی','excuse me':'معاف کیجیے','help':'مدد','happy':'خوش',
+    'sad':'اداس','big':'بڑا','small':'چھوٹا','new':'نیا','old':'پرانا',
+    'beautiful':'خوبصورت','fast':'تیز','slow':'آہستہ','hot':'گرم','cold':'ٹھنڈا',
+    'money':'پیسے','phone':'فون','computer':'کمپیوٹر','internet':'انٹرنیٹ',
+    'pakistan':'پاکستان','city':'شہر','country':'ملک','language':'زبان',
+    'people':'لوگ','man':'آدمی','woman':'عورت','child':'بچہ','mother':'ماں',
+    'father':'والد','brother':'بھائی','sister':'بہن','son':'بیٹا','daughter':'بیٹی'
+  },
+  // en → fr
+  'en-fr': {
+    'hello':'bonjour','hi':'salut','good':'bon','morning':'matin','evening':'soir',
+    'night':'nuit','how':'comment','are':'êtes','you':'vous','i':'je','am':'suis',
+    'fine':'bien','thank':'merci','thanks':'merci','please':'s\'il vous plaît',
+    'yes':'oui','no':'non','name':'nom','my':'mon','what':'quoi','is':'est',
+    'your':'votre','where':'où','when':'quand','who':'qui','why':'pourquoi',
+    'this':'ce','that':'cela','and':'et','or':'ou','but':'mais','the':'le','a':'un','an':'un',
+    'love':'amour','friend':'ami','family':'famille','home':'maison','food':'nourriture',
+    'water':'eau','work':'travail','school':'école','book':'livre','time':'temps',
+    'day':'jour','today':'aujourd\'hui','tomorrow':'demain','yesterday':'hier','now':'maintenant',
+    'come':'venez','go':'allez','eat':'mangez','drink':'buvez','see':'voyez',
+    'know':'savez','want':'voulez','need':'besoin','have':'avez','get':'obtenez',
+    'good morning':'bonjour','good night':'bonne nuit','thank you':'merci',
+    'how are you':'comment allez-vous','my name is':'je m\'appelle',
+    'i love you':'je t\'aime','welcome':'bienvenue','sorry':'désolé',
+    'happy':'heureux','sad':'triste','big':'grand','small':'petit',
+    'beautiful':'beau','hot':'chaud','cold':'froid','money':'argent',
+    'phone':'téléphone','computer':'ordinateur','language':'langue',
+    'people':'gens','man':'homme','woman':'femme','child':'enfant',
+    'mother':'mère','father':'père','brother':'frère','sister':'sœur'
+  },
+  // en → es
+  'en-es': {
+    'hello':'hola','hi':'hola','good':'bueno','morning':'mañana','evening':'tarde',
+    'night':'noche','how':'cómo','are':'estás','you':'tú','i':'yo','am':'soy',
+    'fine':'bien','thank':'gracias','thanks':'gracias','please':'por favor',
+    'yes':'sí','no':'no','name':'nombre','my':'mi','what':'qué','is':'es',
+    'your':'tu','where':'dónde','when':'cuándo','who':'quién','why':'por qué',
+    'this':'esto','that':'eso','and':'y','or':'o','but':'pero','the':'el','a':'un','an':'un',
+    'love':'amor','friend':'amigo','family':'familia','home':'casa','food':'comida',
+    'water':'agua','work':'trabajo','school':'escuela','book':'libro','time':'tiempo',
+    'day':'día','today':'hoy','tomorrow':'mañana','yesterday':'ayer','now':'ahora',
+    'good morning':'buenos días','good night':'buenas noches','thank you':'gracias',
+    'how are you':'¿cómo estás?','my name is':'me llamo','i love you':'te amo',
+    'welcome':'bienvenido','sorry':'lo siento','happy':'feliz','sad':'triste',
+    'big':'grande','small':'pequeño','beautiful':'hermoso','hot':'caliente','cold':'frío',
+    'money':'dinero','phone':'teléfono','computer':'computadora','language':'idioma',
+    'people':'gente','man':'hombre','woman':'mujer','child':'niño',
+    'mother':'madre','father':'padre','brother':'hermano','sister':'hermana'
+  },
+  // en → de
+  'en-de': {
+    'hello':'hallo','hi':'hallo','good':'gut','morning':'morgen','evening':'abend',
+    'night':'nacht','how':'wie','are':'sind','you':'sie','i':'ich','am':'bin',
+    'fine':'gut','thank':'danke','thanks':'danke','please':'bitte',
+    'yes':'ja','no':'nein','name':'name','my':'mein','what':'was','is':'ist',
+    'your':'ihr','where':'wo','when':'wann','who':'wer','why':'warum',
+    'this':'dies','that':'das','and':'und','or':'oder','but':'aber','the':'der','a':'ein','an':'ein',
+    'love':'liebe','friend':'freund','family':'familie','home':'haus','food':'essen',
+    'water':'wasser','work':'arbeit','school':'schule','book':'buch','time':'zeit',
+    'day':'tag','today':'heute','tomorrow':'morgen','yesterday':'gestern','now':'jetzt',
+    'good morning':'guten morgen','good night':'gute nacht','thank you':'danke schön',
+    'how are you':'wie geht es ihnen','my name is':'ich heiße','i love you':'ich liebe dich',
+    'welcome':'willkommen','sorry':'entschuldigung','happy':'glücklich','sad':'traurig',
+    'big':'groß','small':'klein','beautiful':'schön','hot':'heiß','cold':'kalt',
+    'money':'geld','phone':'telefon','computer':'computer','language':'sprache',
+    'people':'leute','man':'mann','woman':'frau','child':'kind',
+    'mother':'mutter','father':'vater','brother':'bruder','sister':'schwester'
+  },
+  // en → ar
+  'en-ar': {
+    'hello':'مرحبا','hi':'مرحبا','good':'جيد','morning':'صباح','evening':'مساء',
+    'night':'ليل','how':'كيف','are':'أنت','you':'أنت','i':'أنا','am':'أنا',
+    'fine':'بخير','thank':'شكرا','thanks':'شكرا','please':'من فضلك',
+    'yes':'نعم','no':'لا','name':'اسم','my':'اسمي','what':'ماذا','is':'هو',
+    'your':'اسمك','where':'أين','when':'متى','who':'من','why':'لماذا',
+    'love':'حب','friend':'صديق','family':'عائلة','home':'بيت','food':'طعام',
+    'water':'ماء','work':'عمل','school':'مدرسة','book':'كتاب','time':'وقت',
+    'day':'يوم','today':'اليوم','tomorrow':'غدا','yesterday':'أمس','now':'الآن',
+    'good morning':'صباح الخير','good night':'تصبح على خير','thank you':'شكرا جزيلا',
+    'how are you':'كيف حالك','i love you':'أحبك','welcome':'أهلا وسهلا',
+    'sorry':'آسف','happy':'سعيد','sad':'حزين','beautiful':'جميل',
+    'hot':'حار','cold':'بارد','money':'مال','phone':'هاتف','language':'لغة'
+  },
+  // en → hi
+  'en-hi': {
+    'hello':'नमस्ते','hi':'नमस्ते','good':'अच्छा','morning':'सुबह','evening':'शाम',
+    'night':'रात','how':'कैसे','are':'हैं','you':'आप','i':'मैं','am':'हूं',
+    'fine':'ठीक','thank':'धन्यवाद','thanks':'धन्यवाद','please':'कृपया',
+    'yes':'हाँ','no':'नहीं','name':'नाम','my':'मेरा','what':'क्या','is':'है',
+    'love':'प्यार','friend':'दोस्त','family':'परिवार','home':'घर','food':'खाना',
+    'water':'पानी','work':'काम','school':'स्कूल','book':'किताब','time':'समय',
+    'day':'दिन','today':'आज','tomorrow':'कल','yesterday':'कल','now':'अभी',
+    'good morning':'सुप्रभात','good night':'शुभ रात्रि','thank you':'धन्यवाद',
+    'how are you':'आप कैसे हैं','i love you':'मैं तुमसे प्यार करता हूं',
+    'welcome':'स्वागत है','sorry':'माफ करें','happy':'खुश','sad':'दुखी',
+    'big':'बड़ा','small':'छोटा','beautiful':'सुंदर','hot':'गर्म','cold':'ठंडा',
+    'money':'पैसा','phone':'फोन','computer':'कंप्यूटर','language':'भाषा'
+  },
+  // en → zh
+  'en-zh': {
+    'hello':'你好','hi':'嗨','good':'好','morning':'早上','evening':'晚上',
+    'night':'夜晚','how':'怎么','are':'是','you':'你','i':'我','am':'是',
+    'fine':'好','thank':'谢谢','thanks':'谢谢','please':'请',
+    'yes':'是','no':'不','name':'名字','my':'我的','what':'什么','is':'是',
+    'love':'爱','friend':'朋友','family':'家人','home':'家','food':'食物',
+    'water':'水','work':'工作','school':'学校','book':'书','time':'时间',
+    'day':'天','today':'今天','tomorrow':'明天','yesterday':'昨天','now':'现在',
+    'good morning':'早上好','good night':'晚安','thank you':'谢谢你',
+    'how are you':'你好吗','i love you':'我爱你','welcome':'欢迎',
+    'sorry':'对不起','happy':'快乐','sad':'悲伤','beautiful':'美丽',
+    'hot':'热','cold':'冷','money':'钱','phone':'电话','language':'语言'
+  },
+  // en → tr
+  'en-tr': {
+    'hello':'merhaba','hi':'merhaba','good':'iyi','morning':'sabah','evening':'akşam',
+    'night':'gece','how':'nasıl','are':'siniz','you':'siz','i':'ben','am':'im',
+    'fine':'iyi','thank':'teşekkür','thanks':'teşekkürler','please':'lütfen',
+    'yes':'evet','no':'hayır','name':'isim','my':'benim','what':'ne','is':'dir',
+    'love':'aşk','friend':'arkadaş','family':'aile','home':'ev','food':'yemek',
+    'water':'su','work':'iş','school':'okul','book':'kitap','time':'zaman',
+    'day':'gün','today':'bugün','tomorrow':'yarın','yesterday':'dün','now':'şimdi',
+    'good morning':'günaydın','good night':'iyi geceler','thank you':'teşekkür ederim',
+    'how are you':'nasılsınız','i love you':'seni seviyorum','welcome':'hoş geldiniz',
+    'sorry':'özür dilerim','happy':'mutlu','sad':'üzgün','beautiful':'güzel',
+    'hot':'sıcak','cold':'soğuk','money':'para','phone':'telefon','language':'dil'
+  },
+  // en → ru
+  'en-ru': {
+    'hello':'привет','hi':'привет','good':'хорошо','morning':'утро','evening':'вечер',
+    'night':'ночь','how':'как','are':'вы','you':'вы','i':'я','am':'есть',
+    'fine':'хорошо','thank':'спасибо','thanks':'спасибо','please':'пожалуйста',
+    'yes':'да','no':'нет','name':'имя','my':'мой','what':'что','is':'это',
+    'love':'любовь','friend':'друг','family':'семья','home':'дом','food':'еда',
+    'water':'вода','work':'работа','school':'школа','book':'книга','time':'время',
+    'day':'день','today':'сегодня','tomorrow':'завтра','yesterday':'вчера','now':'сейчас',
+    'good morning':'доброе утро','good night':'спокойной ночи','thank you':'спасибо',
+    'how are you':'как дела','i love you':'я тебя люблю','welcome':'добро пожаловать',
+    'sorry':'извините','happy':'счастливый','sad':'грустный','beautiful':'красивый',
+    'hot':'жарко','cold':'холодно','money':'деньги','phone':'телефон','language':'язык'
+  },
+  // en → it
+  'en-it': {
+    'hello':'ciao','hi':'ciao','good':'buono','morning':'mattina','evening':'sera',
+    'night':'notte','how':'come','are':'stai','you':'tu','i':'io','am':'sono',
+    'fine':'bene','thank':'grazie','thanks':'grazie','please':'per favore',
+    'yes':'sì','no':'no','name':'nome','my':'mio','what':'cosa','is':'è',
+    'love':'amore','friend':'amico','family':'famiglia','home':'casa','food':'cibo',
+    'water':'acqua','work':'lavoro','school':'scuola','book':'libro','time':'tempo',
+    'day':'giorno','today':'oggi','tomorrow':'domani','yesterday':'ieri','now':'ora',
+    'good morning':'buongiorno','good night':'buonanotte','thank you':'grazie mille',
+    'how are you':'come stai','i love you':'ti amo','welcome':'benvenuto',
+    'sorry':'mi dispiace','happy':'felice','sad':'triste','beautiful':'bello',
+    'hot':'caldo','cold':'freddo','money':'soldi','phone':'telefono','language':'lingua'
+  },
+  // en → pt
+  'en-pt': {
+    'hello':'olá','hi':'oi','good':'bom','morning':'manhã','evening':'tarde',
+    'night':'noite','how':'como','are':'está','you':'você','i':'eu','am':'sou',
+    'fine':'bem','thank':'obrigado','thanks':'obrigado','please':'por favor',
+    'yes':'sim','no':'não','name':'nome','my':'meu','what':'o que','is':'é',
+    'love':'amor','friend':'amigo','family':'família','home':'casa','food':'comida',
+    'water':'água','work':'trabalho','school':'escola','book':'livro','time':'tempo',
+    'day':'dia','today':'hoje','tomorrow':'amanhã','yesterday':'ontem','now':'agora',
+    'good morning':'bom dia','good night':'boa noite','thank you':'obrigado',
+    'how are you':'como vai você','i love you':'eu te amo','welcome':'bem-vindo',
+    'sorry':'desculpe','happy':'feliz','sad':'triste','beautiful':'bonito',
+    'hot':'quente','cold':'frio','money':'dinheiro','phone':'telefone','language':'idioma'
+  },
+  // en → ko
+  'en-ko': {
+    'hello':'안녕하세요','hi':'안녕','good':'좋은','morning':'아침','evening':'저녁',
+    'night':'밤','how':'어떻게','are':'입니다','you':'당신','i':'나','am':'입니다',
+    'fine':'좋아요','thank':'감사합니다','thanks':'고마워요','please':'제발',
+    'yes':'네','no':'아니요','name':'이름','my':'내','what':'무엇','is':'입니다',
+    'love':'사랑','friend':'친구','family':'가족','home':'집','food':'음식',
+    'water':'물','work':'일','school':'학교','book':'책','time':'시간',
+    'day':'날','today':'오늘','tomorrow':'내일','yesterday':'어제','now':'지금',
+    'good morning':'좋은 아침','good night':'안녕히 주무세요','thank you':'감사합니다',
+    'how are you':'어떻게 지내세요','i love you':'사랑해','welcome':'환영합니다',
+    'sorry':'미안해요','happy':'행복한','sad':'슬픈','beautiful':'아름다운',
+    'hot':'뜨거운','cold':'차가운','money':'돈','phone':'전화','language':'언어'
+  },
+  // en → ja
+  'en-ja': {
+    'hello':'こんにちは','hi':'やあ','good':'良い','morning':'朝','evening':'夕方',
+    'night':'夜','how':'どうやって','are':'です','you':'あなた','i':'私','am':'です',
+    'fine':'元気','thank':'ありがとう','thanks':'ありがとう','please':'お願いします',
+    'yes':'はい','no':'いいえ','name':'名前','my':'私の','what':'何','is':'です',
+    'love':'愛','friend':'友達','family':'家族','home':'家','food':'食べ物',
+    'water':'水','work':'仕事','school':'学校','book':'本','time':'時間',
+    'day':'日','today':'今日','tomorrow':'明日','yesterday':'昨日','now':'今',
+    'good morning':'おはようございます','good night':'おやすみなさい','thank you':'ありがとうございます',
+    'how are you':'お元気ですか','i love you':'愛しています','welcome':'ようこそ',
+    'sorry':'ごめんなさい','happy':'幸せ','sad':'悲しい','beautiful':'美しい',
+    'hot':'暑い','cold':'寒い','money':'お金','phone':'電話','language':'言語'
+  }
+};
+
+// Build reverse dictionaries (X → en) automatically
+const REVERSE = {};
+for(const key in DICT){
+  const [src, tgt] = key.split('-');
+  const revKey = tgt + '-en';
+  if(!REVERSE[revKey]) REVERSE[revKey] = {};
+  for(const [eng, trans] of Object.entries(DICT[key])){
+    if(trans) REVERSE[revKey][trans.toLowerCase()] = eng;
+  }
+}
+const ALL_DICTS = Object.assign({}, DICT, REVERSE);
+
+function offlineTranslate(text, src, tgt){
+  // Same language
+  if(src === tgt) return { out: text, matched: text.split(/\s+/).length, total: text.split(/\s+/).length };
+
+  // Pivot through English if needed
+  let pairs = [];
+  if(src === 'en') pairs = [[`en-${tgt}`, null]];
+  else if(tgt === 'en') pairs = [[`${src}-en`, null]];
+  else pairs = [[`${src}-en`, 'en'], [`en-${tgt}`, null]]; // two-step pivot
+
+  function translateOnce(inputText, dictKey){
+    const dict = ALL_DICTS[dictKey];
+    if(!dict) return { out: inputText, matched: 0, total: 1 };
+
+    // Try multi-word phrases first (up to 4 words), then single words
+    let result = inputText;
+    let matched = 0;
+    const lower = result.toLowerCase();
+
+    // Build output word by word with phrase matching
+    const words = result.split(/\s+/);
+    const total = words.length;
+    let i = 0, output = [];
+
+    while(i < words.length){
+      let found = false;
+      // Try 4-word, 3-word, 2-word, 1-word phrase
+      for(let len = Math.min(4, words.length - i); len >= 1; len--){
+        const phrase = words.slice(i, i+len).join(' ').toLowerCase()
+          .replace(/[?!.,;:]/g,'');
+        if(dict[phrase]){
+          output.push(dict[phrase]);
+          matched += len;
+          i += len;
+          found = true;
+          break;
+        }
+      }
+      if(!found){
+        output.push(words[i]); // keep original word
+        i++;
+      }
+    }
+    return { out: output.filter(Boolean).join(' '), matched, total };
+  }
+
+  let current = text;
+  let totalMatched = 0, totalWords = 0;
+
+  for(const [dictKey] of pairs){
+    const res = translateOnce(current, dictKey);
+    current = res.out;
+    totalMatched += res.matched;
+    totalWords += res.total;
+  }
+
+  return { out: current, matched: totalMatched, total: totalWords };
+}
+
+async function doTranslate(){
+  const text = document.getElementById('srcText').value.trim();
+  if(!text){ setStatus('Type something to translate first.', 'error'); return; }
+  const src = document.getElementById('srcLang').value;
+  const tgt = document.getElementById('tgtLang').value;
+  if(src === tgt){ setStatus('Source and target language are the same.', 'error'); return; }
+
+  const btn = document.getElementById('transBtn');
+  btn.disabled = true;
+  document.getElementById('btnIcon').textContent = '⏳';
+  document.getElementById('btnText').textContent = 'Translating…';
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('qualityWrap').classList.remove('show');
+  setStatus('Processing offline…', '');
+
+  // Small delay to show loading state
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const { out, matched, total } = offlineTranslate(text, src, tgt);
+    document.getElementById('tgtText').value = out;
+    document.getElementById('outCount').textContent = out.length + ' chars';
+    reqCount++;
+    document.getElementById('statReqs').textContent = reqCount;
+
+    const sel = document.getElementById('tgtLang');
+    const langName = sel.options[sel.selectedIndex].text.replace(/[^\w\s]/g, '').trim();
+    document.getElementById('statLang').textContent = langName;
+
+    const pct = total > 0 ? Math.round((matched / total) * 100) : 50;
+    document.getElementById('qualityWrap').classList.add('show');
+    document.getElementById('qualityBar').style.width = pct + '%';
+    document.getElementById('qualityPct').textContent = pct + '%';
+    document.getElementById('qualityBar').style.background =
+      pct > 65 ? 'var(--green)' : pct > 35 ? '#f59e0b' : 'var(--red)';
+
+    setStatus(`✓ Translation complete — ${matched}/${total} words matched`, 'success');
+  } catch(e) {
+    setStatus('Error: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  document.getElementById('btnIcon').textContent = '🌐';
+  document.getElementById('btnText').textContent = 'Translate';
+  document.getElementById('spinner').classList.remove('show');
+}
+
+document.addEventListener('keydown', e => { if(e.ctrlKey && e.key === 'Enter') doTranslate(); });
+</script>
+</body>
+</html>
